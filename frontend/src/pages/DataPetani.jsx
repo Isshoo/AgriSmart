@@ -4,10 +4,12 @@ import { kecamatanService } from '../services/kecamatanService';
 import useAuthStore from '../store/authStore';
 import { hasAccess } from '../utils/roleRedirect';
 import Pagination from '../components/Pagination';
+import { kelompokTaniService } from '../services/kelompokTaniService';
 
 const DataPetani = () => {
   const [petani, setPetani] = useState([]);
   const [kecamatan, setKecamatan] = useState([]);
+  const [kelompokTani, setKelompokTani] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -33,6 +35,7 @@ const DataPetani = () => {
 
   useEffect(() => {
     fetchKecamatan();
+    fetchKelompokTani();
   }, []);
 
   useEffect(() => {
@@ -67,6 +70,14 @@ const DataPetani = () => {
       setKecamatan(data);
     } catch (error) {
       console.error('Error fetching kecamatan:', error);
+    }
+  };
+  const fetchKelompokTani = async () => {
+    try {
+      const data = await kelompokTaniService.getAll({ limit: 1000 });
+      setKelompokTani(data.data || []);
+    } catch (error) {
+      console.error('Error fetching kelompok tani:', error);
     }
   };
 
@@ -370,6 +381,8 @@ const DataPetani = () => {
                     />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Kecamatan</label>
                   <select
@@ -385,6 +398,23 @@ const DataPetani = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Kelompok Tani</label>
+                  <select
+                    required
+                    value={formData.kelompokTaniId}
+                    onChange={(e) => setFormData({ ...formData, kelompokTaniId: e.target.value })}
+                    className="block w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                  >
+                    <option value="">Pilih Kelompok Tani</option>
+                    {kelompokTani?.map((kt) => (
+                      <option key={kt.id} value={kt.id}>
+                        {kt.nama}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">
