@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  PENYULUH
+  KEPALA_BIDANG
+  KEPALA_DINAS
+}
+
+enum StatusVerifikasi {
+  PENDING
+  DITERIMA
+  DITOLAK
+}
+
+model User {
+  id        String   @id @default(uuid())
+  nama      String
+  username  String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Kecamatan {
+  id        String   @id @default(uuid())
+  nama      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  kelompokTani KelompokTani[]
+  petani       Petani[]
+
+  @@map("kecamatan")
+}
+
+model KelompokTani {
+  id              String   @id @default(uuid())
+  nama            String
+  ketua           String
+  jumlahAnggota   Int      @default(0)
+  kecamatanId     String
+  luasLahanTotal  Float    @default(0)
+  alamat          String?
+  kontak          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  kecamatan Kecamatan @relation(fields: [kecamatanId], references: [id])
+  petani    Petani[]
+  komoditas Komoditas[]
+
+  @@map("kelompok_tani")
+}
+
+model Petani {
+  id            String   @id @default(uuid())
+  nama          String
+  nik           String   @unique
+  alamat        String
+  kontak        String?
+  luasLahan     Float
+  jenisTanaman  String
+  kecamatanId   String
+  kelompokTaniId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  kecamatan    Kecamatan    @relation(fields: [kecamatanId], references: [id])
+  kelompokTani KelompokTani? @relation(fields: [kelompokTaniId], references: [id])
+
+  @@map("petani")
+}
+
+model Komoditas {
+  id            String   @id @default(uuid())
+  jenis         String
+  luasTanam     Float
+  estimasiPanen Float?
+  jenisPupuk    String?
+  pestisida     String?
+  kelompokTaniId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  kelompokTani KelompokTani? @relation(fields: [kelompokTaniId], references: [id])
+
+  @@map("komoditas")
+}
+
+model Verifikasi {
+  id            String          @id @default(uuid())
+  petaniId      String?         @unique
+  kelompokTaniId String?        @unique
+  status        StatusVerifikasi @default(PENDING)
+  catatan       String?
+  verifiedBy    String?
+  verifiedAt    DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@map("verifikasi")
+}
+
