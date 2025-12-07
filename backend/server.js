@@ -8,6 +8,7 @@ import kelompokTaniRoutes from './routes/kelompokTani.routes.js';
 import komoditasRoutes from './routes/komoditas.routes.js';
 import laporanRoutes from './routes/laporan.routes.js';
 import kecamatanRoutes from './routes/kecamatan.routes.js';
+import verifikasiRoutes from './routes/verifikasi.routes.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/kelompok-tani', kelompokTaniRoutes);
 app.use('/api/komoditas', komoditasRoutes);
 app.use('/api/laporan', laporanRoutes);
 app.use('/api/kecamatan', kecamatanRoutes);
+app.use('/api/verifikasi', verifikasiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

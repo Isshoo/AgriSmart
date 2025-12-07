@@ -175,62 +175,86 @@ const DataKelompokTani = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Kelompok</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ketua</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah Anggota</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kecamatan</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Luas Lahan (Ha)</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nama Kelompok</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Ketua</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Jumlah Anggota</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kecamatan</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Luas Lahan (Ha)</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Aksi</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {kelompokTani.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
                       Tidak ada data
                     </td>
                   </tr>
                 ) : (
-                  kelompokTani.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.nama}
+                  kelompokTani.map((item, index) => (
+                    <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">{item.nama}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.ketua}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.jumlahAnggota || item._count?.petani || 0}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-600">{item.ketua}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.kecamatan?.nama}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {item.jumlahAnggota || item._count?.petani || 0}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.luasLahanTotal?.toFixed(2) || '0.00'}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {item.kecamatan?.nama}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{item.luasLahanTotal?.toFixed(2) || '0.00'} Ha</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                          item.verificationStatus === 'DITERIMA' 
+                            ? 'bg-green-100 text-green-800 border-green-200'
+                            : item.verificationStatus === 'DITOLAK'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                        }`}>
+                          {item.verificationStatus === 'DITERIMA' 
+                            ? 'Terverifikasi'
+                            : item.verificationStatus === 'DITOLAK'
+                            ? 'Ditolak'
+                            : 'Menunggu'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleDetail(item.id)}
-                          className="text-green-600 hover:text-green-900 mr-3"
-                        >
-                          Detail
-                        </button>
-                        {canEdit && (
+                        <div className="flex items-center space-x-3">
                           <button
-                            onClick={() => handleEdit(item)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
+                            onClick={() => handleDetail(item.id)}
+                            className="text-green-600 hover:text-green-900 font-medium transition-colors"
                           >
-                            Edit
+                            Detail
                           </button>
-                        )}
-                        {canDelete && (
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Hapus
-                          </button>
-                        )}
+                          {canEdit && (
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="text-blue-600 hover:text-blue-900 font-medium transition-colors"
+                            >
+                              Edit
+                            </button>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="text-red-600 hover:text-red-900 font-medium transition-colors"
+                            >
+                              Hapus
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

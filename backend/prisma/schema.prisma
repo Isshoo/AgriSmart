@@ -48,16 +48,20 @@ model Kecamatan {
 }
 
 model KelompokTani {
-  id              String   @id @default(uuid())
-  nama            String
-  ketua           String
-  jumlahAnggota   Int      @default(0)
-  kecamatanId     String
-  luasLahanTotal  Float    @default(0)
-  alamat          String?
-  kontak          String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String          @id @default(uuid())
+  nama              String
+  ketua             String
+  jumlahAnggota     Int             @default(0)
+  kecamatanId       String
+  luasLahanTotal    Float           @default(0)
+  alamat            String?
+  kontak            String?
+  verificationStatus StatusVerifikasi @default(PENDING)
+  verifiedBy        String?
+  verifiedAt        DateTime?
+  catatan           String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   kecamatan Kecamatan @relation(fields: [kecamatanId], references: [id])
   petani    Petani[]

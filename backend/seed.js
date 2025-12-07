@@ -144,8 +144,18 @@ async function main() {
   ];
 
   const kelompokTani = await Promise.all(
-    kelompokTaniData.map((data) => {
+    kelompokTaniData.map((data, index) => {
       const kecamatanObj = kecamatan.find((k) => k.nama === data.kecamatan);
+      // Set status: 60% DITERIMA, 30% PENDING, 10% DITOLAK
+      let status = 'PENDING';
+      if (index % 10 < 6) {
+        status = 'DITERIMA';
+      } else if (index % 10 < 9) {
+        status = 'PENDING';
+      } else {
+        status = 'DITOLAK';
+      }
+      
       return prisma.kelompokTani.create({
         data: {
           nama: data.nama,
@@ -154,7 +164,8 @@ async function main() {
           alamat: data.alamat,
           kontak: data.kontak,
           jumlahAnggota: 0,
-          luasLahanTotal: 0
+          luasLahanTotal: 0,
+          verificationStatus: status
         }
       });
     })

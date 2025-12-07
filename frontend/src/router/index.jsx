@@ -4,6 +4,7 @@ import Dashboard from '../pages/Dashboard';
 import DataPetani from '../pages/DataPetani';
 import DataKelompokTani from '../pages/DataKelompokTani';
 import DataKomoditas from '../pages/DataKomoditas';
+import Verifikasi from '../pages/Verifikasi';
 import Laporan from '../pages/Laporan';
 import Profil from '../pages/Profil';
 import Layout from '../layouts/Layout';
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: 'komoditas',
         element: <DataKomoditas />
+      },
+      {
+        path: 'verifikasi',
+        element: <Verifikasi />
       },
       {
         path: 'laporan',

@@ -7,7 +7,11 @@ export const getDashboardStats = async (req, res) => {
   try {
     const [totalPetani, totalKelompokTani, totalKecamatan, totalKomoditas] = await Promise.all([
       prisma.petani.count(),
-      prisma.kelompokTani.count(),
+      prisma.kelompokTani.count({
+        where: {
+          verificationStatus: 'DITERIMA'
+        }
+      }),
       prisma.kecamatan.count(),
       prisma.komoditas.count()
     ]);
@@ -18,8 +22,21 @@ export const getDashboardStats = async (req, res) => {
     });
     const luasLahanTotal = petaniData.reduce((sum, p) => sum + p.luasLahan, 0);
 
-    // Get komoditas distribution
+    // Get komoditas distribution (hanya dari kelompok tani yang sudah diverifikasi)
+    const kelompokTaniVerified = await prisma.kelompokTani.findMany({
+      where: {
+        verificationStatus: 'DITERIMA'
+      },
+      select: { id: true }
+    });
+    const kelompokTaniIds = kelompokTaniVerified.map(kt => kt.id);
+
     const komoditasData = await prisma.komoditas.findMany({
+      where: {
+        kelompokTaniId: {
+          in: kelompokTaniIds
+        }
+      },
       select: { jenis: true, luasTanam: true }
     });
 
@@ -28,8 +45,11 @@ export const getDashboardStats = async (req, res) => {
       return acc;
     }, {});
 
-    // Get kelompok tani per kecamatan
+    // Get kelompok tani per kecamatan (hanya yang sudah diverifikasi)
     const kelompokTaniData = await prisma.kelompokTani.findMany({
+      where: {
+        verificationStatus: 'DITERIMA'
+      },
       include: {
         kecamatan: {
           select: { nama: true }
@@ -78,6 +98,9 @@ export const getLaporanPetani = async (req, res) => {
 export const getLaporanKelompokTani = async (req, res) => {
   try {
     const kelompokTani = await prisma.kelompokTani.findMany({
+      where: {
+        verificationStatus: 'DITERIMA'
+      },
       include: {
         kecamatan: true,
         petani: {
@@ -175,7 +198,20 @@ export const exportExcel = async (req, res) => {
 
       filename = 'laporan_kelompok_tani.xlsx';
     } else if (type === 'komoditas') {
+      const kelompokTaniVerified = await prisma.kelompokTani.findMany({
+        where: {
+          verificationStatus: 'DITERIMA'
+        },
+        select: { id: true }
+      });
+      const kelompokTaniIds = kelompokTaniVerified.map(kt => kt.id);
+
       const komoditas = await prisma.komoditas.findMany({
+        where: {
+          kelompokTaniId: {
+            in: kelompokTaniIds
+          }
+        },
         include: {
           kelompokTani: true
         }
@@ -228,6 +264,9 @@ export const exportPDF = async (req, res) => {
       data = { type: 'petani', data: petani };
     } else if (type === 'kelompok-tani') {
       const kelompokTani = await prisma.kelompokTani.findMany({
+        where: {
+          verificationStatus: 'DITERIMA'
+        },
         include: {
           kecamatan: true,
           petani: true,
@@ -236,7 +275,20 @@ export const exportPDF = async (req, res) => {
       });
       data = { type: 'kelompok-tani', data: kelompokTani };
     } else if (type === 'komoditas') {
+      const kelompokTaniVerified = await prisma.kelompokTani.findMany({
+        where: {
+          verificationStatus: 'DITERIMA'
+        },
+        select: { id: true }
+      });
+      const kelompokTaniIds = kelompokTaniVerified.map(kt => kt.id);
+
       const komoditas = await prisma.komoditas.findMany({
+        where: {
+          kelompokTaniId: {
+            in: kelompokTaniIds
+          }
+        },
         include: {
           kelompokTani: true
         }

@@ -9,6 +9,16 @@ export const getAllKelompokTani = async (req, res) => {
 
     const where = {};
 
+    // Kepala Bidang hanya melihat data yang sudah diverifikasi
+    if (req.user.role === 'KEPALA_BIDANG') {
+      where.verificationStatus = 'DITERIMA';
+    }
+    // Kepala Dinas hanya melihat data yang sudah diverifikasi
+    else if (req.user.role === 'KEPALA_DINAS') {
+      where.verificationStatus = 'DITERIMA';
+    }
+    // Admin dan Penyuluh bisa melihat semua
+
     if (search) {
       where.OR = [
         { nama: { contains: search, mode: 'insensitive' } },
@@ -113,7 +123,8 @@ export const createKelompokTani = async (req, res) => {
         alamat,
         kontak,
         jumlahAnggota: 0,
-        luasLahanTotal: 0
+        luasLahanTotal: 0,
+        verificationStatus: 'PENDING'
       },
       include: {
         kecamatan: true
