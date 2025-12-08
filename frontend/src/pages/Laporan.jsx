@@ -88,15 +88,27 @@ const Laporan = () => {
           startY: 20
         });
       } else if (laporanType === 'kelompok-tani') {
-        const tableData = response.data.map(item => [
-          item.nama,
-          item.ketua,
-          item.jumlahAnggota,
-          item.kecamatan?.nama || '-',
-          item.luasLahanTotal?.toFixed(2) || '0'
-        ]);
+        const tableData = response.data.map(item => {
+          const komoditas = item.komoditas || [];
+          const komoditasList = komoditas.length > 0 ? komoditas.map(k => k.jenis).join(', ') : '-';
+          const estimasiPanen = komoditas.length > 0 ? komoditas.reduce((sum, k) => sum + (k.estimasiPanen || 0), 0) : '-';
+          const pupukList = komoditas.length > 0 ? [...new Set(komoditas.map(k => k.jenisPupuk).filter(Boolean))].join(', ') || '-' : '-';
+          const pestisidaList = komoditas.length > 0 ? [...new Set(komoditas.map(k => k.pestisida).filter(Boolean))].join(', ') || '-' : '-';
+          
+          return [
+            item.nama,
+            item.ketua,
+            item.jumlahAnggota,
+            item.kecamatan?.nama || '-',
+            item.luasLahanTotal?.toFixed(2) || '0',
+            komoditasList,
+            estimasiPanen !== '-' ? `${estimasiPanen.toFixed(2)} Ton` : '-',
+            pupukList,
+            pestisidaList
+          ];
+        });
         doc.autoTable({
-          head: [['Nama Kelompok', 'Ketua', 'Jumlah Anggota', 'Kecamatan', 'Luas Lahan (Ha)']],
+          head: [['Nama Kelompok', 'Ketua', 'Jumlah Anggota', 'Kecamatan', 'Luas Lahan (Ha)', 'Jenis Komoditas', 'Estimasi Panen', 'Jenis Pupuk', 'Pestisida']],
           body: tableData,
           startY: 20
         });
@@ -235,12 +247,16 @@ const Laporan = () => {
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Jumlah Anggota</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kecamatan</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Luas Lahan</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Jenis Komoditas</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Estimasi Panen</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Jenis Pupuk</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Pestisida</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {paginatedData.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="px-6 py-12 text-center">
+                        <td colSpan="9" className="px-6 py-12 text-center">
                           <div className="flex flex-col items-center">
                             <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -250,29 +266,50 @@ const Laporan = () => {
                         </td>
                       </tr>
                     ) : (
-                      paginatedData.map((item, index) => (
-                        <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-semibold text-gray-900">{item.nama}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-600">{item.ketua}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                              {item.jumlahAnggota}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {item.kecamatan?.nama}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{item.luasLahanTotal?.toFixed(2)} Ha</div>
-                          </td>
-                        </tr>
-                      ))
+                      paginatedData.map((item, index) => {
+                        // Ambil komoditas dari kelompok tani
+                        const komoditas = item.komoditas || [];
+                        const komoditasList = komoditas.length > 0 ? komoditas.map(k => k.jenis).join(', ') : '-';
+                        const estimasiPanen = komoditas.length > 0 ? komoditas.reduce((sum, k) => sum + (k.estimasiPanen || 0), 0) : '-';
+                        const pupukList = komoditas.length > 0 ? [...new Set(komoditas.map(k => k.jenisPupuk).filter(Boolean))].join(', ') || '-' : '-';
+                        const pestisidaList = komoditas.length > 0 ? [...new Set(komoditas.map(k => k.pestisida).filter(Boolean))].join(', ') || '-' : '-';
+                        
+                        return (
+                          <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-semibold text-gray-900">{item.nama}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-600">{item.ketua}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                {item.jumlahAnggota}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {item.kecamatan?.nama}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{item.luasLahanTotal?.toFixed(2)} Ha</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-600">{komoditasList}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-600">{estimasiPanen !== '-' ? `${estimasiPanen.toFixed(2)} Ton` : '-'}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-600">{pupukList}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-600">{pestisidaList}</div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>

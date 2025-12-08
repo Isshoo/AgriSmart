@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes.js';
 import petaniRoutes from './routes/petani.routes.js';
@@ -17,9 +18,20 @@ const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
+app.use(express.static('public'));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        connectSrc: ["'self'", "*"],
+      }
+    }
+  })
+);
 
 // Routes
 app.use('/api/auth', authRoutes);

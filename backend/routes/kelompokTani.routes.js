@@ -4,10 +4,12 @@ import {
   getKelompokTaniById,
   createKelompokTani,
   updateKelompokTani,
-  deleteKelompokTani
+  deleteKelompokTani,
+  uploadDocument
 } from '../controllers/kelompokTani.controller.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 import { roleGuard } from '../middleware/auth.middleware.js';
+import upload from '../utils/uploader.js';
 
 const router = express.Router();
 
@@ -24,6 +26,8 @@ router.get('/:id', getKelompokTaniById);
 router.post('/', roleGuard('PENYULUH', 'ADMIN'), createKelompokTani);
 router.put('/:id', roleGuard('PENYULUH', 'ADMIN'), updateKelompokTani);
 router.delete('/:id', roleGuard('ADMIN'), deleteKelompokTani);
+
+router.post('/upload/:id', roleGuard('PENYULUH', 'ADMIN'), upload.single('document'), uploadDocument);
 
 export default router;
 

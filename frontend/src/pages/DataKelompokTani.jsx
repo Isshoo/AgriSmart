@@ -22,7 +22,8 @@ const DataKelompokTani = () => {
     ketua: '',
     kecamatanId: '',
     alamat: '',
-    kontak: ''
+    kontak: '',
+    document: null
   });
   const { user } = useAuthStore();
 
@@ -83,13 +84,49 @@ const DataKelompokTani = () => {
       if (editingId) {
         await kelompokTaniService.update(editingId, formData);
       } else {
-        await kelompokTaniService.create(formData);
+        const response = await kelompokTaniService.create(formData);
+      
+        await kelompokTaniService.uploadDocument(response.data.id, formData.document);
       }
       setShowModal(false);
       resetForm();
       fetchData(currentPage);
     } catch (error) {
       alert(error.response?.data?.message || 'Terjadi kesalahan');
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setFormData(prev => ({ ...prev, document: null }));
+      return;
+    }
+
+    // Validasi ukuran file (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('Ukuran file terlalu besar. Maksimal 5MB');
+      e.target.value = '';
+      return;
+    }
+
+    // Validasi tipe file
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp', 'application/pdf'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      alert('Tipe file tidak didukung. Gunakan JPG, PNG, GIF, WEBP, atau PDF');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      setFormData(prev => ({ ...prev, document: file }));
+    } catch (error) {
+      alert(error.message || 'Gagal mengupload file');
+      e.target.value = '';
     }
   };
 
@@ -100,7 +137,8 @@ const DataKelompokTani = () => {
       ketua: item.ketua,
       kecamatanId: item.kecamatanId,
       alamat: item.alamat || '',
-      kontak: item.kontak || ''
+      kontak: item.kontak || '',
+      document: item.document || null
     });
     setShowModal(true);
   };
@@ -122,8 +160,17 @@ const DataKelompokTani = () => {
       ketua: '',
       kecamatanId: '',
       alamat: '',
-      kontak: ''
+      kontak: '',
+      document: null
     });
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
+  };
+
+  // open document from localhost:3000/uploads/
+      const handleOpenDocument = (document) => {
+        window.open(`http://localhost:3001/uploads/${document}`, '_blank');
   };
 
   return (
@@ -177,6 +224,7 @@ const DataKelompokTani = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Dokumen</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nama Kelompok</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Ketua</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Jumlah Anggota</th>
@@ -189,13 +237,28 @@ const DataKelompokTani = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {kelompokTani.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
                       Tidak ada data
                     </td>
                   </tr>
                 ) : (
                   kelompokTani.map((item, index) => (
                     <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.document ? (
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600" title={item.document} onClick={() => handleOpenDocument(item.document)}>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-400" title="Tidak ada dokumen">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">{item.nama}</div>
                       </td>
@@ -330,6 +393,25 @@ const DataKelompokTani = () => {
                     onChange={(e) => setFormData({ ...formData, kontak: e.target.value })}
                     className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Dokumen SK (PDF/Image)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {formData.document && (
+                    <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm font-medium text-emerald-700">File terpilih: {formData.document.name}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">

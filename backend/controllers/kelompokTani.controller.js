@@ -109,7 +109,7 @@ export const getKelompokTaniById = async (req, res) => {
 
 export const createKelompokTani = async (req, res) => {
   try {
-    const { nama, ketua, kecamatanId, alamat, kontak } = req.body;
+    const { nama, ketua, kecamatanId, alamat, kontak, document } = req.body;
 
     if (!nama || !ketua || !kecamatanId) {
       return res.status(400).json({ message: 'Data tidak lengkap' });
@@ -122,6 +122,7 @@ export const createKelompokTani = async (req, res) => {
         kecamatanId,
         alamat,
         kontak,
+        document: null,
         jumlahAnggota: 0,
         luasLahanTotal: 0,
         verificationStatus: 'PENDING'
@@ -167,6 +168,7 @@ export const updateKelompokTani = async (req, res) => {
         ...(kecamatanId && { kecamatanId }),
         ...(alamat !== undefined && { alamat }),
         ...(kontak !== undefined && { kontak }),
+        ...(document !== undefined && { document }),
         jumlahAnggota,
         luasLahanTotal
       },
@@ -211,3 +213,21 @@ export const deleteKelompokTani = async (req, res) => {
   }
 };
 
+export const uploadDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: 'File tidak ditemukan' });
+    }
+    const document = req.file.filename;
+    const kelompokTani = await prisma.kelompokTani.update({
+      where: { id: id },
+      data: { document: document }
+    });
+    res.json({ message: 'Document berhasil diupload', data: kelompokTani });
+  } catch (error) {
+    console.error('Upload document error:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan pada server', error: error.message });
+  }
+};

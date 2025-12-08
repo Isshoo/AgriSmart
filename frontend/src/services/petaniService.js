@@ -20,6 +20,16 @@ export const petaniService = {
   delete: async (id) => {
     const response = await api.delete(`/petani/${id}`);
     return response.data;
+  },
+  uploadPhoto: async (id, photo) => {
+    const formData = new FormData();
+    formData.append('photo', photo);
+    const response = await api.post(`/petani/upload/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
   }
 };
 

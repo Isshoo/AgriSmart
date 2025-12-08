@@ -26,7 +26,8 @@ const DataPetani = () => {
     luasLahan: '',
     jenisTanaman: '',
     kecamatanId: '',
-    kelompokTaniId: ''
+    kelompokTaniId: '',
+    photo: null
   });
   const { user } = useAuthStore();
 
@@ -81,18 +82,60 @@ const DataPetani = () => {
     }
   };
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      setFormData(prev => ({ ...prev, photo: null }));
+      return;
+    }
+
+    // Validasi ukuran file (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      alert('Ukuran file terlalu besar. Maksimal 5MB');
+      e.target.value = '';
+      return;
+    }
+
+    // Validasi tipe file
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      alert('Tipe file tidak didukung. Gunakan JPG, PNG, GIF, atau WEBP');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      // Simulasi: hanya simpan nama file
+      const fileName = `${Date.now()}_${file.name}`;
+      setFormData(prev => ({ ...prev, photo: file }));
+      console.log('File uploaded:', fileName, 'Size:', (file.size / 1024).toFixed(2), 'KB');
+    } catch (error) {
+      alert(error.message || 'Gagal mengupload file');
+      e.target.value = '';
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log('Submitting form data:', formData);
       if (editingId) {
         await petaniService.update(editingId, formData);
+        alert('Data petani berhasil diupdate');
       } else {
-        await petaniService.create(formData);
+        const response = await petaniService.create(formData);
+        await petaniService.uploadPhoto(response.data.id, formData.photo);
+        alert('Data petani berhasil ditambahkan');
       }
       setShowModal(false);
       resetForm();
-      fetchData();
+      fetchData(currentPage);
     } catch (error) {
+      console.error('Error submitting:', error);
       alert(error.response?.data?.message || 'Terjadi kesalahan');
     }
   };
@@ -107,7 +150,8 @@ const DataPetani = () => {
       luasLahan: item.luasLahan,
       jenisTanaman: item.jenisTanaman,
       kecamatanId: item.kecamatanId,
-      kelompokTaniId: item.kelompokTaniId || ''
+      kelompokTaniId: item.kelompokTaniId || '',
+      photo: item.photo || null
     });
     setShowModal(true);
   };
@@ -132,8 +176,16 @@ const DataPetani = () => {
       luasLahan: '',
       jenisTanaman: '',
       kecamatanId: '',
-      kelompokTaniId: ''
+      kelompokTaniId: '',
+      photo: null
     });
+    // Reset file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) fileInput.value = '';
+  };
+
+  const handleOpenPhoto = (photo) => {
+    window.open(`http://localhost:3001/uploads/${photo}`, '_blank');
   };
 
   return (
@@ -212,6 +264,7 @@ const DataPetani = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                 <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Foto</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Nama</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">NIK</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Kelompok Tani</th>
@@ -226,7 +279,7 @@ const DataPetani = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {petani.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center">
+                    <td colSpan="8" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center">
                         <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -238,6 +291,21 @@ const DataPetani = () => {
                 ) : (
                   petani.map((item, index) => (
                     <tr key={item.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {item.photo ? (
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 text-emerald-600" title={item.photo} onClick={() => handleOpenPhoto(item.photo)}>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 text-gray-400" title="Tidak ada foto">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                        )}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-semibold text-gray-900">{item.nama}</div>
                       </td>
@@ -415,6 +483,25 @@ const DataPetani = () => {
                     ))}
                   </select>
                 </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Foto Profil</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                  {formData.photo && (
+                    <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <svg className="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <p className="text-sm font-medium text-emerald-700">File terpilih: {formData.photo.name}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="mt-6 flex justify-end space-x-3">

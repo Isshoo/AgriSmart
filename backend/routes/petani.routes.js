@@ -4,10 +4,12 @@ import {
   getPetaniById,
   createPetani,
   updatePetani,
-  deletePetani
+  deletePetani,
+  uploadPhoto
 } from '../controllers/petani.controller.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 import { roleGuard } from '../middleware/auth.middleware.js';
+import upload from '../utils/uploader.js';
 
 const router = express.Router();
 
@@ -24,6 +26,8 @@ router.get('/:id', getPetaniById);
 router.post('/', roleGuard('PENYULUH', 'ADMIN'), createPetani);
 router.put('/:id', roleGuard('PENYULUH', 'ADMIN'), updatePetani);
 router.delete('/:id', roleGuard('ADMIN'), deletePetani);
+
+router.post('/upload/:id', roleGuard('PENYULUH', 'ADMIN'), upload.single('photo'), uploadPhoto);
 
 export default router;
 

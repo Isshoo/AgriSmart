@@ -83,7 +83,7 @@ export const getPetaniById = async (req, res) => {
 
 export const createPetani = async (req, res) => {
   try {
-    const { nama, nik, alamat, kontak, luasLahan, jenisTanaman, kecamatanId, kelompokTaniId } = req.body;
+    const { nama, nik, alamat, kontak, luasLahan, jenisTanaman, kecamatanId, kelompokTaniId, photo } = req.body;
 
     if (!nama || !nik || !alamat || !luasLahan || !jenisTanaman || !kecamatanId) {
       return res.status(400).json({ message: 'Data tidak lengkap' });
@@ -107,7 +107,8 @@ export const createPetani = async (req, res) => {
         luasLahan: parseFloat(luasLahan),
         jenisTanaman,
         kecamatanId,
-        kelompokTaniId: kelompokTaniId || null
+        kelompokTaniId: kelompokTaniId || null,
+        photo: null
       },
       include: {
         kecamatan: true,
@@ -118,14 +119,19 @@ export const createPetani = async (req, res) => {
     res.status(201).json({ message: 'Data petani berhasil ditambahkan', data: petani });
   } catch (error) {
     console.error('Create petani error:', error);
-    res.status(500).json({ message: 'Terjadi kesalahan pada server' });
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ 
+      message: 'Terjadi kesalahan pada server',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
 export const updatePetani = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nama, nik, alamat, kontak, luasLahan, jenisTanaman, kecamatanId, kelompokTaniId } = req.body;
+    const { nama, nik, alamat, kontak, luasLahan, jenisTanaman, kecamatanId, kelompokTaniId, photo } = req.body;
 
     const existingPetani = await prisma.petani.findUnique({
       where: { id }
@@ -156,7 +162,8 @@ export const updatePetani = async (req, res) => {
         ...(luasLahan && { luasLahan: parseFloat(luasLahan) }),
         ...(jenisTanaman && { jenisTanaman }),
         ...(kecamatanId && { kecamatanId }),
-        ...(kelompokTaniId !== undefined && { kelompokTaniId: kelompokTaniId || null })
+        ...(kelompokTaniId !== undefined && { kelompokTaniId: kelompokTaniId || null }),
+        ...(photo !== undefined && { photo })
       },
       include: {
         kecamatan: true,
@@ -194,3 +201,20 @@ export const deletePetani = async (req, res) => {
   }
 };
 
+export const uploadPhoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!req.file) {
+      return res.status(400).json({ message: 'File tidak ditemukan' });
+    }
+    const photo = req.file.filename;
+    const petani = await prisma.petani.update({
+      where: { id: id },
+      data: { photo: photo }
+    });
+    res.json({ message: 'Photo berhasil diupload', data: petani });
+  } catch (error) {
+    console.error('Upload photo error:', error);
+    res.status(500).json({ message: 'Terjadi kesalahan pada server', error: error.message });
+  }
+};

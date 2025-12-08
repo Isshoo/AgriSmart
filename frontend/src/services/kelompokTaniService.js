@@ -20,6 +20,16 @@ export const kelompokTaniService = {
   delete: async (id) => {
     const response = await api.delete(`/kelompok-tani/${id}`);
     return response.data;
+  },
+  uploadDocument: async (id, document) => {
+    const formData = new FormData();
+    formData.append('document', document);
+    const response = await api.post(`/kelompok-tani/upload/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
   }
 };
 

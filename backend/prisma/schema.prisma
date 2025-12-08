@@ -56,6 +56,7 @@ model KelompokTani {
   luasLahanTotal    Float           @default(0)
   alamat            String?
   kontak            String?
+  document          String?
   verificationStatus StatusVerifikasi @default(PENDING)
   verifiedBy        String?
   verifiedAt        DateTime?
@@ -78,6 +79,7 @@ model Petani {
   kontak        String?
   luasLahan     Float
   jenisTanaman  String
+  photo         String?
   kecamatanId   String
   kelompokTaniId String?
   createdAt     DateTime @default(now())
